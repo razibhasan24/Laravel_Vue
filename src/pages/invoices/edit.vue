@@ -1,26 +1,27 @@
 <script setup>
 import { ref, onMounted } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 
 const route = useRoute();
-const invoicesId = route.params.id;
+const router = useRouter();
+const invoiceId = route.params.id;
 
-const baseUrl = `http://razib.intelsofts.com/projects/laravel/mex/api/`;
-const endpoint = `invoices/${invoicesId}`;
-//const invoice = ref({});
+// সরাসরি API URL এখানে
+const apiUrl = `http://razib.intelsofts.com/projects/laravel/mex/api/invoices/${invoiceId}`;
 
 const invoice = ref({
-  name: "",
-  mobile: "",
-  email: "",
+  customer_id: "",
+  invoice_date: "",
+  remarks: "",
+  total_amount: "",
+  status: "",
 });
 
-const file = ref(null);
 const message = ref("");
 
 onMounted(async () => {
   try {
-    const response = await fetch(`${baseUrl}${endpoint}`, {
+    const response = await fetch(apiUrl, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -28,68 +29,75 @@ onMounted(async () => {
       },
     });
 
-    let c = await response.json();
-    invoice.value = c;
-    //console.log(c.invoice)
+    const data = await response.json();
+    invoice.value = data;
   } catch (err) {
     console.error("Fetch Error:", err);
-    throw err;
   }
 });
 
-function handleFile(event) {
-  file.value = event.target.files[0];
-}
-
-async function submitinvoice() {
+async function submitInvoice() {
   const formData = new FormData();
-  //formData.append('id', invoiceId);
-  formData.append("name", invoice.value.name);
-  formData.append("mobile", invoice.value.mobile);
-  formData.append("email", invoice.value.email);
-  formData.append("photo", file.value); // image file
-
-  //console.log(file.value);
+  formData.append("customer_id", invoice.value.customer_id);
+  formData.append("invoice_date", invoice.value.invoice_date);
+  formData.append("remarks", invoice.value.remarks);
+  formData.append("total_amount", invoice.value.total_amount);
+  formData.append("status", invoice.value.status);
 
   try {
-    //console.log(`${baseUrl}${endpoint}`);
-
-    const response = await fetch(`${baseUrl}${endpoint}`, {
-      method: "POST",
-      body: formData, // no need to set Content-Type
+    const response = await fetch(apiUrl, {
+      method: "POST", // অথবা PUT/PATCH যা API প্রয়োজন করে
+      body: formData,
     });
 
     const result = await response.json();
-
-    message.value = result.message || "Upload successful";
+    message.value = result.message || "Invoice updated successfully";
   } catch (error) {
-    message.value = "Upload failed: " + error.message;
+    message.value = "Update failed: " + error.message;
   }
 }
 </script>
+
 <template>
-  <h1>Create invoices</h1>
-  <router-link to="/invoices">Back</router-link>
-  {{ message }}
-  <form @submit.prevent="submitinvoice">
-    <div>
-      Name<br />
-      <input v-model="invoice.name" type="text" name="name" />
-    </div>
-    <div>
-      Mobile<br />
-      <input v-model="invoice.mobile" type="text" name="mobile" />
-    </div>
-    <div>
-      Email<br />
-      <input v-model="invoice.email" type="text" name="email" />
-    </div>
-    <div>
-      Photo<br />
-      <input type="file" @change="handleFile" accept="image/*" />
-    </div>
-    <div>
-      <input type="submit" name="submit" value="Submit" />
-    </div>
-  </form>
+  <div>
+    <h1>Edit Invoice</h1>
+    <router-link to="/invoices">← Back</router-link>
+
+    <p style="color: green">{{ message }}</p>
+
+    <form @submit.prevent="submitInvoice">
+      <div>
+        <label>Customer ID:</label><br />
+        <input v-model="invoice.customer_id" type="text" name="customer_id" />
+      </div>
+
+      <div>
+        <label>Invoice Date:</label><br />
+        <input v-model="invoice.invoice_date" type="date" name="invoice_date" />
+      </div>
+
+      <div>
+        <label>Remarks:</label><br />
+        <input v-model="invoice.remarks" type="text" name="remarks" />
+      </div>
+
+      <div>
+        <label>Total Amount:</label><br />
+        <input
+          v-model="invoice.total_amount"
+          type="number"
+          name="total_amount"
+        />
+      </div>
+
+      <div>
+        <label>Status:</label><br />
+        <input v-model="invoice.status" type="text" name="status" />
+      </div>
+
+      <div style="margin-top: 15px">
+        <input type="submit" value="Update Invoice" />
+      </div>
+    </form>
+  </div>
 </template>

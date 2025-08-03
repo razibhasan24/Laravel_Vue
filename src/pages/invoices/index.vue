@@ -5,13 +5,18 @@ const invoices = ref([]);
 
 onMounted(async () => {
   try {
-    const res = await fetch("/api/invoices");
-    const data = await res.json();
+    const response = await fetch(
+      "http://razib.intelsofts.com/projects/laravel/update_mex/public/api/invoices"
+    );
+    const data = await response.json();
 
-    invoices.value = data.invoices || [];
-    console.log("", invoices.value);
-  } catch (err) {
-    console.error("", err);
+    console.log("Full API response:", data);
+
+    invoices.value = data || [];
+
+    console.log("Invoices:", [...invoices.value]);
+  } catch (error) {
+    console.error("Fetch Error:", error);
   }
 });
 </script>
@@ -23,11 +28,11 @@ onMounted(async () => {
   <table class="table">
     <thead>
       <tr>
-        <th>ID</th>
+        <th>#ID</th>
         <th>Customer ID</th>
         <th>Invoice Date</th>
         <th>Total Amount</th>
-        <th>Status ID</th>
+        <th>Status</th>
         <th>Actions</th>
       </tr>
     </thead>

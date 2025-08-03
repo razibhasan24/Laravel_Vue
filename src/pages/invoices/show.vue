@@ -5,14 +5,13 @@ import { useRoute } from "vue-router";
 const route = useRoute();
 const invoiceId = route.params.id;
 
-const invoice = ref({});
+const apiUrl = `http://razib.intelsofts.com/projects/laravel/update_mex/public/api/invoices/${invoiceId}`;
 
-const baseUrl = `http://127.0.0.1:8000/api/`;
-const endpoint = `invoices/${invoiceId}`;
+const invoice = ref({});
 
 onMounted(async () => {
   try {
-    const response = await fetch(`${baseUrl}${endpoint}`, {
+    const response = await fetch(apiUrl, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -20,19 +19,23 @@ onMounted(async () => {
       },
     });
 
-    let c = await response.json();
-    invoice.value = c;
-    console.log(c);
+    const data = await response.json();
+    invoice.value = data;
+    console.log(data);
   } catch (err) {
     console.error("Fetch Error:", err);
-    throw err;
   }
 });
 </script>
+
 <template>
-  <h1>Details</h1>
+  <h1>Invoice Details</h1>
   <router-link to="/invoices">Back</router-link>
-  {{ invoice.name }}<br />
-  {{ invoice.mobile }}<br />
-  {{ invoice.email }}
+  <div>
+    <strong>Customer ID:</strong> {{ invoice.customer_id }}<br />
+    <strong>Invoice Date:</strong> {{ invoice.invoice_date }}<br />
+    <strong>Status:</strong> {{ invoice.status }}<br />
+    <strong>Total Amount:</strong> {{ invoice.total_amount }}<br />
+    <strong>Remarks:</strong> {{ invoice.remarks }}
+  </div>
 </template>
