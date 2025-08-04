@@ -2,98 +2,82 @@
 import { ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
-// Router instance
-const router = useRouter();
 const route = useRoute();
-const invoiceId = route.params.id;
+const router = useRouter();
 
-// Reactive invoice data
-const invoice = ref({});
+const invoice = ref(null);
+const message = ref("");
+const error = ref("");
 
-// Delete handler
-async function handleDelete() {
-  if (confirm("Are you sure?")) {
-    try {
-      const response = await fetch(
-        `http://razib.intelsofts.com/projects/laravel/update_mex/public/api/invoices/${invoiceId}`,
-        {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-        }
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("Delete Error:", errorData);
-        alert(`Delete failed: ${errorData.message}`);
-        return;
-      }
-
-      alert("Invoice deleted successfully.");
-      router.push("/invoices");
-    } catch (error) {
-      console.error("Delete Error:", error);
-      alert("An unexpected error occurred.");
-    }
+async function fetchInvoice() {
+  try {
+    const res = await fetch(
+      `http://razib.intelsofts.com/projects/laravel/update_mex/public/api/invoices/${route.params.id}`
+    );
+    if (res.ok) invoice.value = await res.json();
+    else error.value = "Invoice not found.";
+  } catch (e) {
+    error.value = e.message;
   }
 }
 
-// Fetch invoice details
-onMounted(async () => {
+async function deleteInvoice() {
+  if (!confirm("Are you sure you want to delete this invoice?")) return;
+
   try {
-    const response = await fetch(fullUrl, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error("Fetch failed: " + errorText);
+    const res = await fetch(
+      `http://razib.intelsofts.com/projects/laravel/update_mex/public/api/invoices/${route.params.id}`,
+      {
+        method: "DELETE",
+      }
+    );
+    if (res.ok) {
+      alert("Invoice deleted successfully.");
+      router.push("/invoices");
+    } else {
+      const errText = await res.text();
+      throw new Error(errText);
     }
-
-    const data = await response.json();
-    invoice.value = data;
-  } catch (err) {
-    console.error("Fetch Error:", err);
+  } catch (e) {
+    message.value = "Failed to delete invoice: " + e.message;
   }
-});
+}
+
+onMounted(fetchInvoice);
 </script>
 
 <template>
-  <div class="container" style="padding: 20px">
-    <h1>Delete Invoice</h1>
-    <router-link to="/invoices">⬅ Back to List</router-link>
+  <div class="container" v-if="invoice">
+    <h2>Delete Invoice #{{ invoice.id }}</h2>
+    <p>Are you sure you want to delete this invoice?</p>
+    <p><strong>Customer ID:</strong> {{ invoice.customer_id }}</p>
+    <p><strong>Invoice Date:</strong> {{ invoice.invoice_date }}</p>
+    <p><strong>Status:</strong> {{ invoice.status }}</p>
 
-    <h4 style="margin-top: 20px">
-      Are you sure you want to delete this invoice?
-    </h4>
+    <button @click="deleteInvoice">Yes, Delete</button>
+    <button @click="$router.back()">Cancel</button>
 
-    <div style="margin-top: 15px">
-      <strong>Customer ID:</strong> {{ invoice.customer_id }} <br />
-      <strong>Invoice Date:</strong> {{ invoice.invoice_date }} <br />
-      <strong>Status:</strong> {{ invoice.status }} <br />
-      <strong>Total Amount:</strong> {{ invoice.total_amount }} <br />
-      <strong>Remarks:</strong> {{ invoice.remarks }}
-    </div>
-
-    <button
-      @click="handleDelete"
-      style="
-        margin-top: 20px;
-        background: red;
-        color: white;
-        padding: 10px 20px;
-        border: none;
-        cursor: pointer;
-      "
-    >
-      Delete
-    </button>
+    <p style="color: red">{{ message }}</p>
   </div>
+  <p v-else-if="error">{{ error }}</p>
+  <p v-else>Loading...</p>
 </template>
+
+<style scoped>
+.container {
+  max-width: 600px;
+  margin: auto;
+  margin-top: 40px;
+}
+button {
+  margin: 10px 10px 0 0;
+  padding: 8px 15px;
+  background-color: #cc0000;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+button:hover {
+  background-color: #ff3333;
+}
+</style>

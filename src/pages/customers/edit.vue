@@ -1,115 +1,106 @@
 <script setup>
-  import {ref,onMounted } from 'vue'   
-    import { useRoute} from 'vue-router';
+import { ref, onMounted } from "vue";
+import { useRoute } from "vue-router";
 
-    const route = useRoute();
-    const customerId = route.params.id;     
+const route = useRoute();
+const customerId = route.params.id;
 
-    
-     const baseUrl=`http://127.0.0.1:8000/api/`   
-     const endpoint=`customers/${customerId}`
-     //const customer = ref({});
+// full URL with id included, no separate endpoint
+const baseUrl = `http://razib.intelsofts.com/projects/laravel/update_mex/public/api/customers/${customerId}`;
 
-      const customer = ref({
-        name: '',
-        mobile: '',
-        email:''
-     });
+const customer = ref({
+  name: "",
+  id_type: "",
+  id_number: "",
+  phone: "",
+  address: "",
+  file: null,
+});
 
-     const file = ref(null);
-     const message = ref('');
+const file = ref(null);
+const message = ref("");
 
-
-onMounted(async () => {  
-
+onMounted(async () => {
   try {
-
-
-    const response = await fetch(`${baseUrl}${endpoint}`, {
-      method:'GET',
+    const response = await fetch(baseUrl, {
+      method: "GET",
       headers: {
-        'Content-Type': 'application/json',
-        'Accept':'application/json'        
-      }
-          
-    });  
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+    });
 
-    let c= await response.json();    
-    customer.value=c;
-    //console.log(c.customer)
-
+    let c = await response.json();
+    customer.value = c;
   } catch (err) {
-    console.error('Fetch Error:', err);
+    console.error("Fetch Error:", err);
     throw err;
   }
+});
 
-})
-
-
-
-    function handleFile(event) {
-        file.value = event.target.files[0];
-    }
+function handleFile(event) {
+  file.value = event.target.files[0];
+}
 
 async function submitCustomer() {
-
   const formData = new FormData();
-  //formData.append('id', customerId);
-  formData.append('name', customer.value.name);
-  formData.append('mobile', customer.value.mobile);
-  formData.append('email', customer.value.email);
-  formData.append('photo', file.value); // image file
+  formData.append("name", customer.value.name);
+  formData.append("id_type", customer.value.id_type);
+  formData.append("id_number", customer.value.id_number);
+  formData.append("phone", customer.value.phone);
+  formData.append("address", customer.value.address);
+  formData.append("id_poof_document", file.value); // pdf file
 
-
-  //console.log(file.value);
-
-   try {
-
-   //console.log(`${baseUrl}${endpoint}`);
-
-    const response = await fetch(`${baseUrl}${endpoint}`, {
-      method: 'POST',      
-      body: formData, // no need to set Content-Type
+  try {
+    const response = await fetch(baseUrl, {
+      method: "POST",
+      body: formData,
     });
 
     const result = await response.json();
-
-    message.value = result.message || 'Upload successful';
-
+    message.value = result.message || "Upload successful";
   } catch (error) {
-    message.value = 'Upload failed: ' + error.message;
+    message.value = "Upload failed: " + error.message;
   }
-
-
 }
-
-
 </script>
-<template>    
-    <h1>Create Customer</h1>
-    <router-link to="/customers">Back</router-link>
-    {{ message }}
-    <form  @submit.prevent="submitCustomer">
-      <div>
-        Name<br>
-        <input v-model="customer.name" type="text" name="name" />
-      </div>
-      <div>
-        Mobile<br>
-        <input v-model="customer.mobile" type="text" name="mobile" />
-      </div>
-      <div>
-        Email<br>
-        <input v-model="customer.email" type="text" name="email" />
-      </div>
-        <div>
-        Photo<br>
-        <input type="file"  @change="handleFile" accept="image/*"  />
-      </div>
-      <div>
-       
-        <input type="submit" name="submit" value="Submit" />
-      </div>
-    </form>
- 
+
+<template>
+  <h1>Create Customer</h1>
+  <router-link to="/customers">Back</router-link>
+  <div>{{ message }}</div>
+  <form @submit.prevent="submitCustomer">
+    <div>
+      Name<br />
+      <input v-model="customer.name" type="text" name="name" />
+    </div>
+    <div>
+      Id_Type<br />
+      <input v-model="customer.id_type" type="text" name="id_type" />
+    </div>
+    <div>
+      ID_Number<br />
+      <input v-model="customer.id_number" type="text" name="id_number" />
+    </div>
+    <div>
+      Address<br />
+      <input v-model="customer.address" type="text" name="address" />
+    </div>
+    <div>
+      Phone<br />
+      <input v-model="customer.phone" type="text" name="phone" />
+    </div>
+    <div>
+      Id_Poof_Document<br />
+      <input
+        type="file"
+        @change="handleFile"
+        accept="application/pdf"
+        required
+      />
+    </div>
+    <div>
+      <input type="submit" name="submit" value="Submit" />
+    </div>
+  </form>
 </template>

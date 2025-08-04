@@ -2,69 +2,108 @@
 import { ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
-const router = useRouter();
 const route = useRoute();
+const router = useRouter();
 const purchaseId = route.params.id;
 
-const purchase = ref({});
+const purchase = ref(null);
+const message = ref("");
 
-const baseUrl = `http://127.0.0.1:8000/api/`;
-const endpoint = `purchases/${purchaseId}`;
+const apiUrl = `http://razib.intelsofts.com/projects/laravel/update_mex/public/api/purchases/${purchaseId}`;
 
-async function handleDelete(event) {
-  if (confirm("Are you sure?")) {
-    try {
-      const response = await fetch(`${baseUrl}${endpoint}`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-      });
-
-      //let c= await response.json();
-      router.push("/purchases");
-
-      console.log(c);
-    } catch (err) {
-      console.error("Fetch Error:", err);
-      throw err;
-    }
-  }
-}
-
+// Fetch the specific purchase for display
 onMounted(async () => {
   try {
-    const response = await fetch(`${baseUrl}${endpoint}`, {
+    const response = await fetch(apiUrl, {
       method: "GET",
       headers: {
-        "Content-Type": "application/json",
         Accept: "application/json",
       },
     });
 
-    let c = await response.json();
-    purchase.value = c;
-    console.log(c);
-  } catch (err) {
-    console.error("Fetch Error:", err);
-    throw err;
+    const result = await response.json();
+    purchase.value = result.purchase || result;
+  } catch (error) {
+    message.value = "Error loading purchase: " + error.message;
   }
 });
+
+// Handle deletion
+async function handleDelete() {
+  if (!confirm("Are you sure you want to delete this purchase?")) return;
+
+  try {
+    const response = await fetch(apiUrl, {
+      method: "DELETE",
+      headers: {
+        Accept: "application/json",
+      },
+    });
+
+    const result = await response.json();
+
+    if (response.ok) {
+      message.value = result.message || "Purchase deleted successfully!";
+      router.push("/purchases");
+    } else {
+      message.value = result.message || "Delete failed.";
+    }
+  } catch (error) {
+    message.value = "Delete failed: " + error.message;
+  }
+}
 </script>
+
 <template>
-  <h1>Delete</h1>
+  <h1>Delete Purchase</h1>
   <router-link to="/purchases">Back</router-link>
-  <h4>Are you sure?</h4>
- {{ purchase.agent_id }}<br />
-  {{ purchase.purchase_date }}<br />
-   {{ purchase.remarks }}<br />
-  {{ purchase.purchase_total }}<br />
-  {{ purchase.status_id }}
-  <input
-    type="button"
-    style="width: 70px"
-    @click="handleDelete"
-    value="Delete"
-  />
+
+  <div v-if="message">{{ message }}</div>
+
+  <div v-if="purchase">
+    <p><strong>Agent ID:</strong> {{ purchase.agent_id }}</p>
+    <p><strong>Status ID:</strong> {{ purchase.status_id }}</p>
+    <p><strong>Date:</strong> {{ purchase.purchase_date }}</p>
+    <p><strong>Total:</strong> {{ purchase.purchase_total }}</p>
+    <p><strong>Remarks:</strong> {{ purchase.remarks }}</p>
+
+    <h3>Items</h3>
+    <table border="1" cellpadding="5">
+      <thead>
+        <tr>
+          <th>Currency ID</th>
+          <th>Qty</th>
+          <th>Rate</th>
+          <th>VAT</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="(item, index) in purchase.items || []" :key="index">
+          <td>{{ item.currency_id }}</td>
+          <td>{{ item.qty }}</td>
+          <td>{{ item.rate }}</td>
+          <td>{{ item.vat }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div style="margin-top: 20px">
+      <button @click="handleDelete">Yes, Delete</button>
+    </div>
+  </div>
+
+  <div v-else>
+    <p>Loading purchase details...</p>
+  </div>
 </template>
+
+<style scoped>
+table {
+  margin-top: 10px;
+  border-collapse: collapse;
+}
+td,
+th {
+  padding: 5px;
+}
+</style>

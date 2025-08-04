@@ -1,40 +1,78 @@
 <script setup>
 import { ref, onMounted } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 
 const route = useRoute();
+const router = useRouter();
 const purchaseId = route.params.id;
 
-const purchase = ref({});
+const apiUrl = `http://razib.intelsofts.com/projects/laravel/update_mex/public/api/purchases/${purchaseId}`;
 
-const baseUrl = `http://127.0.0.1:8000/api/`;
-const endpoint = `purchase/${purchaseId}`;
+const purchase = ref(null);
+const message = ref("");
 
 onMounted(async () => {
   try {
-    const response = await fetch(`${baseUrl}${endpoint}`, {
+    const response = await fetch(apiUrl, {
       method: "GET",
       headers: {
-        "Content-Type": "application/json",
         Accept: "application/json",
       },
     });
 
-    let c = await response.json();
-    purchase.value = c;
-    console.log(c);
-  } catch (err) {
-    console.error("Fetch Error:", err);
-    throw err;
+    const result = await response.json();
+    purchase.value = result.purchase || result;
+  } catch (error) {
+    message.value = "Error loading purchase: " + error.message;
   }
 });
 </script>
+
 <template>
-  <h1>Details</h1>
-  <router-link to="/purchase">Back</router-link>
-  {{ purchase.agent_id }}<br />
-  {{ purchase.purchase_date }}<br />
-  {{ purchase.remarks }}<br />
-  {{ purchase.purchase_total }}<br />
-  {{ purchase.status_id }}
+  <h1>View Purchase</h1>
+  <router-link to="/purchases">Back</router-link>
+  <div v-if="message" style="color: red">{{ message }}</div>
+
+  <div v-if="purchase">
+    <p><strong>Agent ID:</strong> {{ purchase.agent_id }}</p>
+    <p><strong>Status ID:</strong> {{ purchase.status_id }}</p>
+    <p><strong>Purchase Date:</strong> {{ purchase.purchase_date }}</p>
+    <p><strong>Total:</strong> {{ purchase.purchase_total }}</p>
+    <p><strong>Remarks:</strong> {{ purchase.remarks }}</p>
+
+    <h3>Purchase Items</h3>
+    <table border="1" cellpadding="5">
+      <thead>
+        <tr>
+          <th>Currency ID</th>
+          <th>Qty</th>
+          <th>Rate</th>
+          <th>VAT</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="(item, index) in purchase.items || []" :key="index">
+          <td>{{ item.currency_id }}</td>
+          <td>{{ item.qty }}</td>
+          <td>{{ item.rate }}</td>
+          <td>{{ item.vat }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div v-else>
+    <p>Loading purchase details...</p>
+  </div>
 </template>
+
+<style scoped>
+table {
+  margin-top: 10px;
+  border-collapse: collapse;
+}
+td,
+th {
+  padding: 5px;
+}
+</style>

@@ -1,62 +1,58 @@
 <script setup>
 import { ref, onMounted } from "vue";
+import { useRouter } from "vue-router";
 
+const router = useRouter();
 const purchases = ref([]);
-const baseUrl = `http://127.0.0.1:8000/api/`;
-const endpoint = `purchases`;
+const message = ref("");
+
+const apiUrl = `http://razib.intelsofts.com/projects/laravel/update_mex/public/api/purchases`;
 
 onMounted(async () => {
   try {
-    const response = await fetch(`${baseUrl}${endpoint}`, {
+    const response = await fetch(apiUrl, {
       headers: {
-        "Content-Type": "application/json",
         Accept: "application/json",
       },
     });
-
     const data = await response.json();
-    purchases.value = data.purchases; // Adjust this line if API response differs
-  } catch (err) {
-    console.error("Fetch Error:", err);
-    purchases.value = [];
+    purchases.value = data.purchases || data; // fallback support
+  } catch (error) {
+    message.value = "Failed to load purchases: " + error.message;
   }
 });
 </script>
 
 <template>
-  <h1>Manage Purchase</h1>
-  <router-link to="/purchases/create">New Purchase</router-link>
+  <h1>Manage Purchases</h1>
+  <router-link to="/purchases/create">+ New Purchase</router-link>
+  <p style="color: red">{{ message }}</p>
 
-  <table class="table">
+  <table border="1" cellpadding="8" cellspacing="0" style="margin-top: 15px">
     <thead>
       <tr>
-        <th>#Id</th>
-        <th>Agent_Id</th>
-        <th>Purchase_Date</th>
+        <th>ID</th>
+        <th>Agent ID</th>
+        <th>Status ID</th>
+        <th>Date</th>
+        <th>Total</th>
         <th>Remarks</th>
-        <th>Purchase_Total</th>
-        <th>Status_Id</th>
         <th>Actions</th>
       </tr>
     </thead>
     <tbody>
       <tr v-for="purchase in purchases" :key="purchase.id">
         <td>{{ purchase.id }}</td>
-        <td>
-          <img
-            :src="`http://127.0.0.1:8000/img/${purchase.photo}`"
-            alt="User Photo"
-            height="100"
-          />
-        </td>
         <td>{{ purchase.agent_id }}</td>
-        <td>{{ purchase.purchase_date }}</td>
-        <td>{{ purchase.remarks }}</td>
-        <td>{{ purchase.purchase_total }}</td>
         <td>{{ purchase.status_id }}</td>
-        <td class="btn-group">
+        <td>{{ purchase.purchase_date }}</td>
+        <td>{{ purchase.purchase_total }}</td>
+        <td>{{ purchase.remarks }}</td>
+        <td>
           <router-link :to="`/purchases/show/${purchase.id}`">View</router-link>
+          |
           <router-link :to="`/purchases/edit/${purchase.id}`">Edit</router-link>
+          |
           <router-link :to="`/purchases/delete/${purchase.id}`"
             >Delete</router-link
           >
@@ -65,3 +61,15 @@ onMounted(async () => {
     </tbody>
   </table>
 </template>
+
+<style scoped>
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+th,
+td {
+  padding: 8px;
+  text-align: left;
+}
+</style>

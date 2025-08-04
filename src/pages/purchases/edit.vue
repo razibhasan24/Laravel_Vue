@@ -1,12 +1,12 @@
 <script setup>
 import { ref, onMounted } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 
 const route = useRoute();
+const router = useRouter();
 const purchaseId = route.params.id;
 
-const baseUrl = `http://127.0.0.1:8000/api/`;
-const endpoint = `purchases/${purchaseId}`;
+const apiUrl = `http://razib.intelsofts.com/projects/laravel/update_mex/public/api/purchases/${purchaseId}`;
 
 const purchase = ref({
   agent_id: "",
@@ -14,53 +14,58 @@ const purchase = ref({
   remarks: "",
   purchase_total: "",
   status_id: "",
+  items: [],
 });
 
-const file = ref(null);
 const message = ref("");
 
+// Fetch purchase details
 onMounted(async () => {
   try {
-    const response = await fetch(`${baseUrl}${endpoint}`, {
+    const response = await fetch(apiUrl, {
       method: "GET",
       headers: {
-        "Content-Type": "application/json",
         Accept: "application/json",
       },
     });
 
-    purchase.value = await response.json();
-  } catch (err) {
-    console.error("Fetch Error:", err);
+    const result = await response.json();
+    purchase.value = result.purchase || result; // fallback if wrapped
+  } catch (error) {
+    message.value = "Failed to load purchase: " + error.message;
   }
 });
 
-function handleFile(event) {
-  file.value = event.target.files[0];
+function addItem() {
+  purchase.value.items.push({ currency_id: "", qty: "", rate: "", vat: "" });
 }
 
-async function submitpurchase() {
-  const formData = new FormData();
-  formData.append("agent_id", purchase.value.agent_id);
-  formData.append("purchase_date", purchase.value.purchase_date);
-  formData.append("remarks", purchase.value.remarks);
-  formData.append("purchase_total", purchase.value.purchase_total);
-  formData.append("status_id", purchase.value.status_id);
+function removeItem(index) {
+  purchase.value.items.splice(index, 1);
+}
 
-  if (file.value) {
-    formData.append("photo", file.value);
-  }
-
+async function updatePurchase() {
   try {
-    const response = await fetch(`${baseUrl}${endpoint}`, {
-      method: "POST",
-      body: formData,
+    const response = await fetch(apiUrl, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify(purchase.value),
     });
 
     const result = await response.json();
-    message.value = result.message || "Upload successful";
+
+    if (response.ok) {
+      message.value = result.message || "Purchase updated successfully!";
+      router.push("/purchases");
+    } else {
+      message.value = result.message || "Update failed.";
+      console.error(result);
+    }
   } catch (error) {
-    message.value = "Upload failed: " + error.message;
+    message.value = "Update failed: " + error.message;
   }
 }
 </script>
@@ -68,39 +73,75 @@ async function submitpurchase() {
 <template>
   <h1>Edit Purchase</h1>
   <router-link to="/purchases">Back</router-link>
-  <p style="color: green">{{ message }}</p>
+  <div>{{ message }}</div>
 
-  <form @submit.prevent="submitpurchase">
+  <form @submit.prevent="updatePurchase">
     <div>
-      Agent Id<br />
-      <input v-model="purchase.agent_id" type="text" name="agent_id" />
+      Agent ID:<br />
+      <input v-model="purchase.agent_id" type="number" required />
     </div>
     <div>
-      Purchase Date<br />
-      <input
-        v-model="purchase.purchase_date"
-        type="date"
-        name="purchase_date"
-      />
+      Purchase Date:<br />
+      <input v-model="purchase.purchase_date" type="date" required />
     </div>
     <div>
-      Remarks<br />
-      <input v-model="purchase.remarks" type="text" name="remarks" />
+      Remarks:<br />
+      <input v-model="purchase.remarks" type="text" />
     </div>
     <div>
-      Purchase Total<br />
-      <input
-        v-model="purchase.purchase_total"
-        type="number"
-        name="purchase_total"
-      />
+      Purchase Total:<br />
+      <input v-model="purchase.purchase_total" type="number" required />
     </div>
     <div>
-      Status Id<br />
-      <input v-model="purchase.status_id" type="text" name="status_id" />
+      Status ID:<br />
+      <input v-model="purchase.status_id" type="number" required />
     </div>
-    <div>
-      <input type="submit" value="Submit" />
+
+    <h3>Purchase Items</h3>
+    <table border="1" cellpadding="5">
+      <thead>
+        <tr>
+          <th>Currency ID</th>
+          <th>Qty</th>
+          <th>Rate</th>
+          <th>VAT</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="(item, index) in purchase.items" :key="index">
+          <td><input v-model="item.currency_id" type="number" required /></td>
+          <td><input v-model="item.qty" type="number" required /></td>
+          <td><input v-model="item.rate" type="number" required /></td>
+          <td><input v-model="item.vat" type="number" required /></td>
+          <td>
+            <button
+              type="button"
+              @click="removeItem(index)"
+              v-if="purchase.items.length > 1"
+            >
+              Remove
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <button type="button" @click="addItem">Add Item</button>
+
+    <div style="margin-top: 20px">
+      <input type="submit" value="Update" />
     </div>
   </form>
 </template>
+
+<style scoped>
+table {
+  margin-top: 10px;
+  border-collapse: collapse;
+}
+td,
+th {
+  padding: 5px;
+}
+</style>

@@ -293,13 +293,13 @@
               </a>
               <ul class="nav nav-treeview">
                 <li class="nav-item">
-                  <router-link to="/customers/create" class="nav-link">
+                  <router-link to="/currencies/create" class="nav-link">
                     <i class="nav-icon bi bi-circle"></i>
                     <p>Create Currency</p>
                   </router-link>
                 </li>
                 <li class="nav-item">
-                  <router-link to="/customers" class="nav-link">
+                  <router-link to="/currencies" class="nav-link">
                     <i class="nav-icon bi bi-circle"></i>
                     <p>Manage Currency</p>
                   </router-link>

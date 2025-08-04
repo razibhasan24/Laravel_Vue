@@ -20,6 +20,12 @@ import CreatePurchase from "./pages/purchases/create.vue";
 import EditPurchase from "./pages/purchases/edit.vue";
 import DeletePurchase from "./pages/purchases/delete.vue";
 
+import Currency from "./pages/currencies/index.vue";
+import ShowCurrency from "./pages/currencies/show.vue";
+import CreateCurrency from "./pages/currencies/create.vue";
+import EditCurrency from "./pages/currencies/edit.vue";
+import DeleteCurrency from "./pages/currencies/delete.vue";
+
 import Customer from "./pages/customers/index.vue";
 import ShowCustomer from "./pages/customers/show.vue";
 import CreateCustomer from "./pages/customers/create.vue";
@@ -51,6 +57,12 @@ const routes = [
   { path: "/purchases/show/:id", component: ShowPurchase },
   { path: "/purchases/edit/:id", component: EditPurchase },
   { path: "/purchases/delete/:id", component: DeletePurchase },
+
+  { path: "/currencies", component: Currency },
+  { path: "/currencies/create", component: CreateCurrency },
+  { path: "/currencies/show/:id", component: ShowCurrency },
+  { path: "/currencies/edit/:id", component: EditCurrency },
+  { path: "/currencies/delete/:id", component: DeleteCurrency },
 
   { path: "/customers", component: Customer },
   { path: "/customers/create", component: CreateCustomer },

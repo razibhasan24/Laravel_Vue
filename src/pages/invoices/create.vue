@@ -1,16 +1,19 @@
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
+import { useRouter } from "vue-router";
 
+const router = useRouter();
 const message = ref("");
+
+const customers = ref([]);
 const invoice = ref({
   customer_id: "",
   invoice_date: "",
-  total_amount: "",
+  total_amount: 0,
   status: "",
   items: [],
 });
 
-// new items
 const newItem = ref({
   description: "",
   qty: 0,
@@ -36,13 +39,10 @@ function addItem() {
     qty: newItem.value.qty,
     rate: newItem.value.rate,
     vat: newItem.value.vat,
-    total_amount: total, // Laravel যদি total_amount ফিল্ড চান, দিতে পারেন
+    total_amount: total,
   });
 
-  // Clear newItem fields
   newItem.value = { description: "", qty: 0, rate: 0, vat: 0 };
-
-  // আপডেট টোটাল এমাউন্ট
   updateTotalAmount();
 }
 
@@ -86,23 +86,26 @@ async function submitInvoice() {
       throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
     }
 
-    const result = await response.json();
+    await response.json();
     message.value = "Invoice created successfully!";
-    console.log("Server response:", result);
-
-    // Clear form after success
-    invoice.value = {
-      customer_id: "",
-      invoice_date: "",
-      total_amount: 0,
-      status: "",
-      items: [],
-    };
+    router.push("/invoices"); // Redirect to list page after creation
   } catch (error) {
     message.value = "Error creating invoice: " + error.message;
-    console.error(error);
   }
 }
+
+async function fetchCustomers() {
+  try {
+    const res = await fetch(
+      "http://razib.intelsofts.com/projects/laravel/update_mex/public/api/customers"
+    );
+    if (res.ok) customers.value = await res.json();
+  } catch {}
+}
+
+onMounted(() => {
+  fetchCustomers();
+});
 </script>
 
 <template>
@@ -110,8 +113,9 @@ async function submitInvoice() {
     <h2>Create Invoice</h2>
 
     <div>
-      <label>Customer ID:</label>
-      <select v-model="invoice.customer_id">
+      <label>Customer:</label>
+      <select v-model="invoice.customer_id" required>
+        <option value="" disabled>Select customer</option>
         <option
           v-for="customer in customers"
           :key="customer.id"
@@ -135,7 +139,6 @@ async function submitInvoice() {
     <hr />
 
     <h3>Add Items</h3>
-
     <div>
       <label>Description:</label>
       <input v-model="newItem.description" type="text" />
@@ -171,23 +174,16 @@ async function submitInvoice() {
         <tr v-for="(item, index) in invoice.items" :key="index">
           <td>{{ item.description }}</td>
           <td>{{ item.qty }}</td>
-          <td>{{ item.rate ? item.rate.toFixed(2) : "0.00" }}</td>
-          <td>{{ item.vat ? item.vat.toFixed(2) : "0.00" }}</td>
-          <td>
-            {{ item.total_amount ? item.total_amount.toFixed(2) : "0.00" }}
-          </td>
+          <td>{{ item.rate.toFixed(2) }}</td>
+          <td>{{ item.vat.toFixed(2) }}</td>
+          <td>{{ item.total_amount.toFixed(2) }}</td>
           <td><button @click="removeItem(index)">X</button></td>
         </tr>
       </tbody>
     </table>
 
     <div>
-      <strong>Total Amount: </strong>
-      {{
-        typeof invoice.total_amount === "number"
-          ? invoice.total_amount.toFixed(2)
-          : "0.00"
-      }}
+      <strong>Total Amount: </strong>{{ invoice.total_amount.toFixed(2) }}
     </div>
 
     <button @click="submitInvoice">Submit Invoice</button>
@@ -205,7 +201,8 @@ label {
   display: block;
   margin-top: 10px;
 }
-input {
+input,
+select {
   width: 100%;
   padding: 6px;
   margin-top: 4px;
