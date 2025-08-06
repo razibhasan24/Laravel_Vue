@@ -4,12 +4,13 @@
    
   const router = useRouter();
     const route = useRoute();
-    const customerId = route.params.id;
+    const orderId = route.params.id;
 
+     const order = ref({});
      const customer = ref({});
 
   const baseUrl=`http://127.0.0.1:8000/api/`
-  const endpoint=`customers/${customerId}`
+  const endpoint=`orders/${orderId}`
 
   async function handleDelete(event) {      
        if(confirm("Are you sure?")){
@@ -25,7 +26,7 @@
     });  
 
     //let c= await response.json();    
-    router.push('/customers');
+    router.push('/orders');
 
 
     console.log(c)
@@ -51,7 +52,8 @@ onMounted(async () => {
     });  
 
     let c= await response.json();    
-    customer.value=c;
+    order.value=c.order;
+    customer.value=c.customer;
     console.log(c)
 
   } catch (err) {
@@ -64,10 +66,10 @@ onMounted(async () => {
 </script>
 <template>    
     <h1>Delete</h1>    
-    <router-link to="/customers">Back</router-link>
+    <router-link to="/orders">Back</router-link>
     <h4>Are you sure?</h4>
-     {{ customer.name }}<br>
-    {{ customer.mobile }}<br>
-    {{ customer.email }}
+    Order ID: {{ order.id }}<br>
+    Order Total: {{ order.order_total }}<br>
+    Customer: {{ customer.name }}
     <input type="button" style="width: 70px;" @click="handleDelete" value="Delete">
 </template>

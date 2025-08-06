@@ -339,19 +339,19 @@
               </a>
               <ul class="nav nav-treeview">
                 <li class="nav-item">
-                  <router-link to="/customers/create" class="nav-link">
+                  <router-link to="/money_stocks/create" class="nav-link">
                     <i class="nav-icon bi bi-circle"></i>
                     <p>Create Stock</p>
                   </router-link>
                 </li>
                 <li class="nav-item">
-                  <router-link to="/customers" class="nav-link">
+                  <router-link to="/money_stocks" class="nav-link">
                     <i class="nav-icon bi bi-circle"></i>
                     <p>Manage Stock</p>
                   </router-link>
                 </li>
                 <li class="nav-item">
-                  <router-link to="/customers" class="nav-link">
+                  <router-link to="/stock_balance" class="nav-link">
                     <i class="nav-icon bi bi-circle"></i>
                     <p>Stock Balance</p>
                   </router-link>
@@ -368,13 +368,13 @@
               </a>
               <ul class="nav nav-treeview">
                 <li class="nav-item">
-                  <router-link to="/customers/create" class="nav-link">
+                  <router-link to="/orders/create" class="nav-link">
                     <i class="nav-icon bi bi-circle"></i>
                     <p>Create Order</p>
                   </router-link>
                 </li>
                 <li class="nav-item">
-                  <router-link to="/customers" class="nav-link">
+                  <router-link to="/orders" class="nav-link">
                     <i class="nav-icon bi bi-circle"></i>
                     <p>Manage Orders</p>
                   </router-link>
@@ -426,13 +426,13 @@
               </a>
               <ul class="nav nav-treeview">
                 <li class="nav-item">
-                  <router-link to="/customers/create" class="nav-link">
+                  <router-link to="/transactions/create" class="nav-link">
                     <i class="nav-icon bi bi-circle"></i>
                     <p>Create transactions</p>
                   </router-link>
                 </li>
                 <li class="nav-item">
-                  <router-link to="/customers" class="nav-link">
+                  <router-link to="/transactions" class="nav-link">
                     <i class="nav-icon bi bi-circle"></i>
                     <p>Manage Transactions</p>
                   </router-link>
@@ -444,21 +444,21 @@
               <a href="#" class="nav-link active">
                 <i class="nav-icon bi bi-speedometer"></i>
                 <p>
-                  Customer
+                  Payment
                   <i class="nav-arrow bi bi-chevron-right"></i>
                 </p>
               </a>
               <ul class="nav nav-treeview">
                 <li class="nav-item">
-                  <router-link to="/customers/create" class="nav-link">
+                  <router-link to="/payments/create" class="nav-link">
                     <i class="nav-icon bi bi-circle"></i>
-                    <p>Create Customer</p>
+                    <p>Create Payment</p>
                   </router-link>
                 </li>
                 <li class="nav-item">
-                  <router-link to="/customers" class="nav-link">
+                  <router-link to="/payments" class="nav-link">
                     <i class="nav-icon bi bi-circle"></i>
-                    <p>Manage Customer</p>
+                    <p>Manage Payment</p>
                   </router-link>
                 </li>
               </ul>

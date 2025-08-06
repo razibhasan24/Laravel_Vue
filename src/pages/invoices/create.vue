@@ -30,6 +30,7 @@ function addItem() {
     alert("Please fill valid item details.");
     return;
   }
+
   const total =
     newItem.value.qty * newItem.value.rate +
     (newItem.value.qty * newItem.value.rate * newItem.value.vat) / 100;
@@ -88,7 +89,7 @@ async function submitInvoice() {
 
     await response.json();
     message.value = "Invoice created successfully!";
-    router.push("/invoices"); // Redirect to list page after creation
+    router.push("/invoices");
   } catch (error) {
     message.value = "Error creating invoice: " + error.message;
   }
@@ -109,127 +110,249 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="container">
-    <h2>Create Invoice</h2>
+  <div class="page-container d-flex flex-column min-vh-100">
+    <!-- Topbar -->
+    <header
+      class="topbar bg-info text-dark py-3 px-4 d-flex justify-content-between align-items-center"
+    >
+      <div class="d-flex align-items-center gap-3">
+        <img src="/img/logo.webp" alt="Logo" class="logo" />
+      </div>
+      <div class="text-end small">
+        <h3 class="mb-0">Money Exchange Ltd.</h3>
+        <div>123 Gulshan Avenue, Dhaka</div>
+        <div>Email: info@moneyexchange.com | Phone: +880 123456789</div>
+      </div>
+    </header>
 
-    <div>
-      <label>Customer:</label>
-      <select v-model="invoice.customer_id" required>
-        <option value="" disabled>Select customer</option>
-        <option
-          v-for="customer in customers"
-          :key="customer.id"
-          :value="customer.id"
-        >
-          {{ customer.name }}
-        </option>
-      </select>
-    </div>
+    <!-- Main Section -->
+    <main
+      class="main-section flex-grow-1 position-relative text-white d-flex flex-column align-items-center"
+    >
+      <div class="overlay"></div>
 
-    <div>
-      <label>Invoice Date:</label>
-      <input v-model="invoice.invoice_date" type="date" required />
-    </div>
+      <div class="content-section z-2">
+        <!-- Invoice Info -->
+        <section class="section-box">
+          <h2 style="display: flex; justify-content: center">Create Invoice</h2>
+          <div>
+            <label>Customer:</label>
+            <select v-model="invoice.customer_id" required>
+              <option value="" disabled>Select customer</option>
+              <option
+                v-for="customer in customers"
+                :key="customer.id"
+                :value="customer.id"
+              >
+                {{ customer.name }}
+              </option>
+            </select>
+          </div>
+          <div>
+            <label>Invoice Date:</label>
+            <input v-model="invoice.invoice_date" type="date" required />
+          </div>
+          <div>
+            <label>Status:</label>
+            <input v-model="invoice.status" type="text" placeholder="Status" />
+          </div>
+        </section>
 
-    <div>
-      <label>Status:</label>
-      <input v-model="invoice.status" type="text" placeholder="Status" />
-    </div>
+        <!-- Add Items -->
+        <section class="section-box">
+          <h3 style="display: flex; justify-content: center">Add Items</h3>
+          <div>
+            <label>Description:</label
+            ><input v-model="newItem.description" type="text" />
+          </div>
+          <div>
+            <label>Quantity:</label
+            ><input v-model.number="newItem.qty" type="number" min="1" />
+          </div>
+          <div>
+            <label>Rate:</label
+            ><input
+              v-model.number="newItem.rate"
+              type="number"
+              min="0"
+              step="0.01"
+            />
+          </div>
+          <div>
+            <label>VAT %:</label
+            ><input
+              v-model.number="newItem.vat"
+              type="number"
+              min="0"
+              step="0.01"
+            />
+          </div>
+          <button style="border-radius: 20px; margin-top: 5px" @click="addItem">
+            ➕ Add Item
+          </button>
+        </section>
 
-    <hr />
+        <!-- Invoice Items -->
+        <section class="section-box">
+          <h4 style="display: flex; justify-content: center">Invoice Items</h4>
+          <table>
+            <thead>
+              <tr>
+                <th>Description</th>
+                <th>Qty</th>
+                <th>Rate</th>
+                <th>VAT %</th>
+                <th>Total Amount</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(item, index) in invoice.items" :key="index">
+                <td>{{ item.description }}</td>
+                <td>{{ item.qty }}</td>
+                <td>{{ item.rate.toFixed(2) }}</td>
+                <td>{{ item.vat.toFixed(2) }}</td>
+                <td>{{ item.total_amount.toFixed(2) }}</td>
+                <td class="delete_btn">
+                  <button @click="removeItem(index)">Delete</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div>
+            <strong>Total Amount:</strong> {{ invoice.total_amount.toFixed(2) }}
+          </div>
+          <button style="border-radius: 20px" @click="submitInvoice">
+            ✅ Submit Invoice
+          </button>
+          <p class="success-message">{{ message }}</p>
+        </section>
+      </div>
+    </main>
 
-    <h3>Add Items</h3>
-    <div>
-      <label>Description:</label>
-      <input v-model="newItem.description" type="text" />
-    </div>
-    <div>
-      <label>Quantity:</label>
-      <input v-model.number="newItem.qty" type="number" min="1" />
-    </div>
-    <div>
-      <label>Rate:</label>
-      <input v-model.number="newItem.rate" type="number" min="0" step="0.01" />
-    </div>
-    <div>
-      <label>VAT %:</label>
-      <input v-model.number="newItem.vat" type="number" min="0" step="0.01" />
-    </div>
-
-    <button @click="addItem">Add Item</button>
-
-    <h4>Invoice Items</h4>
-    <table border="1" cellpadding="6" cellspacing="0">
-      <thead>
-        <tr>
-          <th>Description</th>
-          <th>Qty</th>
-          <th>Rate</th>
-          <th>VAT %</th>
-          <th>Total Amount</th>
-          <th>Remove</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="(item, index) in invoice.items" :key="index">
-          <td>{{ item.description }}</td>
-          <td>{{ item.qty }}</td>
-          <td>{{ item.rate.toFixed(2) }}</td>
-          <td>{{ item.vat.toFixed(2) }}</td>
-          <td>{{ item.total_amount.toFixed(2) }}</td>
-          <td><button @click="removeItem(index)">X</button></td>
-        </tr>
-      </tbody>
-    </table>
-
-    <div>
-      <strong>Total Amount: </strong>{{ invoice.total_amount.toFixed(2) }}
-    </div>
-
-    <button @click="submitInvoice">Submit Invoice</button>
-
-    <p style="color: green">{{ message }}</p>
+    <!-- Footer -->
+    <footer class="footer bg-dark text-center text-white py-3 mt-auto">
+      &copy; 2025 Money Exchange Ltd. All rights reserved.
+    </footer>
   </div>
 </template>
 
-<style scoped>
-.container {
-  max-width: 600px;
-  margin: auto;
+<style>
+.page-container {
+  background-color: #d8cbcb;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  color: #fff;
+  max-width: 1300px;
+  margin: 30px auto 0;
+  padding: 0 20px;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100%;
+  box-sizing: border-box;
+  border-radius: 20px;
 }
-label {
-  display: block;
-  margin-top: 10px;
+
+/* Topbar */
+.topbar .logo {
+  height: 100px;
+  object-fit: contain;
 }
+
+/* Background and overlay */
+.main-section {
+  background-image: url("/img/background.webp");
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  overflow: hidden;
+  padding: 40px 20px;
+}
+
+.main-section .overlay {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(86, 83, 83, 0.8); /* deep opacity */
+  z-index: 1;
+}
+
+.z-2 {
+  position: relative;
+  z-index: 2;
+}
+
+.content-section {
+  max-width: 800px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+/* Section Box */
+.section-box {
+  background-color: rgba(255, 255, 255, 0.05); /* faint box */
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(16, 15, 15, 0.05);
+}
+
+/* Inputs */
 input,
 select {
   width: 100%;
-  padding: 6px;
-  margin-top: 4px;
+  padding: 8px;
+  margin: 8px 0 16px 0;
+  border-radius: 4px;
+  border: none;
+  background-color: #3a3939;
+  color: #fff;
 }
+
+/* Buttons */
 button {
-  margin-top: 10px;
-  padding: 8px 15px;
-  background-color: #003366;
+  padding: 10px 20px;
+  background-color: #007acc;
   color: white;
   border: none;
+  border-radius: 4px;
   cursor: pointer;
 }
 button:hover {
-  background-color: #0055aa;
+  background-color: #00a31e;
 }
+/* .delete_btn:hover {
+  background-color: #a30000;
+} */
+
+/* Table */
 table {
-  margin-top: 20px;
   width: 100%;
   border-collapse: collapse;
+  margin-top: 16px;
+  background-color: rgba(255, 255, 255, 0.05);
+  color: #ffffff;
 }
-th {
-  background-color: #003366;
-  color: white;
-}
-td,
-th {
-  padding: 8px;
+
+th,
+td {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 10px;
   text-align: center;
+}
+
+th {
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.success-message {
+  color: #00ff88;
+  margin-top: 10px;
+  font-weight: bold;
+}
+
+/* Footer */
+.footer {
+  font-size: 14px;
 }
 </style>

@@ -1,137 +1,135 @@
 <script setup>
-import { ref, onMounted, toRaw, computed } from "vue";
+import { reactive, ref, onMounted, toRaw } from "vue";
 
-const baseUrl = `http://127.0.0.1:8000/api/`;
-const endpoint = `orders`;
-
-const endpoint2 = `customers`;
-const endpoint3 = `products`;
-
-const customer_id = ref("");
-const order_date = ref("");
-const shipping_address = ref("");
-const remark = ref("");
-const order_total = ref(0);
-
-const customers = ref({});
-const products = ref({});
-
-const items = ref([]);
-const newItem = ref({
-  id: "",
-  name: "",
-  qty: "",
-  price: "",
-  vat: "0",
-  discount: "0",
+// order object holds everything
+const order = reactive({
+  customer_id: "",
+  order_date: "",
+  order_total: 0,
+  status_id: 1,
+  paid_amount: 0,
+  remarks: "",
+  items: [],
+  customers: [],
+  products: [],
 });
 
-const selectedText = computed(() => {
-  const selected = products.value.find((p) => p.id === newItem.value.id);
-  return selected ? selected.name : "";
+// new item for adding to order
+const newItem = reactive({
+  product_id: "",
+  qty: 1,
+  rate: 0,
+  vat: 0,
 });
 
+// fetch customers and products
 onMounted(async () => {
   try {
-    const [res1, res2] = await Promise.all([
-      fetch(`${baseUrl}${endpoint2}`),
-      fetch(`${baseUrl}${endpoint3}`),
+    const [resCustomers, resProducts] = await Promise.all([
+      fetch(
+        "http://razib.intelsofts.com/projects/laravel/update_mex/public/api/customers"
+      ),
+      fetch(
+        "http://razib.intelsofts.com/projects/laravel/update_mex/public/api/products"
+      ),
     ]);
 
-    let r1 = await res1.json();
-    let r2 = await res2.json();
+    const customerData = await resCustomers.json();
+    const productData = await resProducts.json();
 
-    customers.value = r1.customers;
-    products.value = r2.products;
-  } catch (err) {
-    console.error("Fetch Error:", err);
-    throw err;
+    order.customers = customerData.customers || [];
+    order.products = productData.products || [];
+  } catch (error) {
+    console.error("Error fetching data:", error);
   }
 });
 
-const addItem = async () => {
-  items.value.push({
-    id: newItem.value.id,
-    name: selectedText.value,
-    qty: newItem.value.qty,
-    price: newItem.value.price,
-    vat: newItem.value.vat,
-    discount: newItem.value.discount,
+// Add item to order.items
+const addItem = () => {
+  const selectedProduct = order.products.find(
+    (p) => p.id === newItem.product_id
+  );
+  if (!selectedProduct) return;
+
+  order.items.push({
+    product_id: newItem.product_id,
+    product_name: selectedProduct.name,
+    qty: newItem.qty,
+    rate: newItem.rate,
+    vat: newItem.vat,
   });
 
-  //console.log(selectedText.value);
-
-  order_total.value = items.value.reduce((accumulator, currentValue) => {
-    return accumulator + (currentValue.price * currentValue.qty || 0);
-  }, 0);
+  updateTotal();
 };
 
-async function submitOrder() {
-  let jsonData = {
-    customer_id: customer_id.value,
-    order_date: order_date.value,
-    delivery_date: order_date.value,
-    shipping_address: shipping_address.value,
-    order_total: order_total.value,
-    paid_amount: order_total.value,
-    status_id: 1,
-    remark: "Na",
-    items: toRaw(items.value),
-  };
+// Update order total
+const updateTotal = () => {
+  order.order_total = order.items.reduce((sum, item) => {
+    return sum + (item.qty * item.rate + item.vat);
+  }, 0);
+  order.paid_amount = order.order_total;
+};
 
-  //console.log(jsonData);
-
+// Submit the order
+const submitOrder = async () => {
   try {
-    const response = await fetch(`${baseUrl}${endpoint}`, {
-      method: "POST",
-      body: JSON.stringify(jsonData), // no need to set Content-Type
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-    });
+    const response = await fetch(
+      "http://razib.intelsofts.com/projects/laravel/update_mex/public/api/orders",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify(toRaw(order)),
+      }
+    );
 
-    const res = await response.json();
-
-    console.log(res);
-    // message.value = result.message || 'Upload successful';
+    const result = await response.json();
+    console.log("Order submitted:", result);
   } catch (error) {
-    // message.value = 'Upload failed: ' + error.message;
+    console.error("Error submitting order:", error);
   }
-
-  //console.log(jsonData);
-}
+};
 </script>
+
 <template>
   <div class="order-container">
-    <div class="order-header">
-      <h2>Create Order</h2>
+    <h2>Create Order</h2>
+    <div class="form-section">
+      <label>Customer</label>
+      <select v-model="order.customer_id">
+        <option
+          v-for="customer in order.customers"
+          :key="customer.id"
+          :value="customer.id"
+        >
+          {{ customer.name }}
+        </option>
+      </select>
+
+      <label>Order Date</label>
+      <input type="date" v-model="order.order_date" />
+
+      <label>Remarks</label>
+      <textarea v-model="order.remarks"></textarea>
     </div>
-    <div class="order-info">
-      <table>
-        <tr>
-          <td>Customer Name</td>
-          <td>
-            <select id="customer" v-model="customer_id">
-              <option
-                v-for="customer in customers"
-                :key="customer.id"
-                :value="customer.id"
-              >
-                {{ customer.name }}
-              </option>
-            </select>
-          </td>
-        </tr>
-        <tr>
-          <td>Order Date</td>
-          <td><input v-model="order_date" type="date" id="date" /></td>
-        </tr>
-        <tr>
-          <td>Shipping Address</td>
-          <td><textarea id="address" v-model="shipping_address"></textarea></td>
-        </tr>
-      </table>
+
+    <h3>Add Items</h3>
+    <div class="form-section">
+      <select v-model="newItem.product_id">
+        <option
+          v-for="product in order.products"
+          :key="product.id"
+          :value="product.id"
+        >
+          {{ product.name }}
+        </option>
+      </select>
+      <input type="number" placeholder="Qty" v-model.number="newItem.qty" />
+      <input type="number" placeholder="Rate" v-model.number="newItem.rate" />
+      <input type="number" placeholder="VAT" v-model.number="newItem.vat" />
+      <button @click="addItem">Add</button>
     </div>
 
     <table class="order-table">
@@ -139,111 +137,65 @@ async function submitOrder() {
         <tr>
           <th>Product</th>
           <th>Qty</th>
-          <th>Unit Price</th>
+          <th>Rate</th>
+          <th>VAT</th>
           <th>Total</th>
-        </tr>
-        <tr>
-          <th>
-            <select id="product" v-model="newItem.id">
-              <option
-                v-for="product in products"
-                :key="product.id"
-                :value="product.id"
-              >
-                {{ product.name }}
-              </option>
-            </select>
-          </th>
-          <th><input type="text" id="qty" v-model="newItem.qty" /></th>
-          <th><input type="text" id="price" v-model="newItem.price" /></th>
-          <th><input @click="addItem" type="button" id="add" value="Add" /></th>
         </tr>
       </thead>
       <tbody>
-        <tr v-for="item in items">
-          <td>{{ item.id }} {{ item.name }}</td>
+        <tr v-for="(item, index) in order.items" :key="index">
+          <td>{{ item.product_name }}</td>
           <td>{{ item.qty }}</td>
-          <td>{{ item.price }}</td>
-          <td>{{ item.qty * item.price }}</td>
+          <td>{{ item.rate }}</td>
+          <td>{{ item.vat }}</td>
+          <td>{{ (item.qty * item.rate + item.vat).toFixed(2) }}</td>
         </tr>
       </tbody>
     </table>
 
-    <div class="order-total">
-      Total Amount:<input type="text" v-model="order_total" />
+    <div class="totals">
+      <p><strong>Total:</strong> {{ order.order_total }}</p>
     </div>
-    <div>
-      <button class="btn btn-primary" @click="submitOrder">Create Order</button>
-    </div>
+
+    <button @click="submitOrder">Submit Order</button>
   </div>
 </template>
 
-<style>
+<style scoped>
 .order-container {
-  background-color: #fff;
-  width: 100%;
+  padding: 20px;
+  max-width: 800px;
   margin: auto;
-  padding: 25px;
-  border-radius: 10px;
-  box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 0 10px #ccc;
 }
-
-.order-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 2px solid #ddd;
-  padding-bottom: 10px;
+.form-section {
   margin-bottom: 20px;
 }
-
-.order-header h2 {
-  margin: 0;
-  color: #333;
+label {
+  display: block;
+  margin-top: 10px;
 }
-
-.order-info {
-  margin-bottom: 20px;
+input,
+select,
+textarea {
+  width: 100%;
+  padding: 8px;
+  margin-top: 5px;
 }
-
-.order-info p {
-  margin: 5px 0;
-  color: #555;
-}
-
 .order-table {
   width: 100%;
   border-collapse: collapse;
-  margin-bottom: 20px;
+  margin-top: 20px;
 }
-
 .order-table th,
 .order-table td {
-  border: 1px solid #ddd;
+  border: 1px solid #ccc;
   padding: 10px;
-  text-align: left;
 }
-
-.order-table th {
-  background-color: #f8f8f8;
-}
-
-.order-total {
+.totals {
   text-align: right;
-  font-weight: bold;
-  font-size: 1.1em;
-  margin-top: 10px;
-}
-
-@media (max-width: 600px) {
-  .order-header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .order-header h2,
-  .order-header span {
-    font-size: 1em;
-  }
+  margin-top: 20px;
 }
 </style>
