@@ -1,6 +1,12 @@
 // src/route.js
 import { createRouter, createWebHistory } from "vue-router";
 
+// Authentications router
+// import { createRouter, createWebHistory } from "vue-router";
+// import { useAuthStore } from "./stores/auth";
+// import Login from "./components/Login.vue";
+// import Dashboard from "./views/Dashboard.vue";
+
 // component router
 
 import Home from "./components/Home.vue";
@@ -76,7 +82,27 @@ import DeleteStock from "./pages/money_stocks/delete.vue";
 
 import Vendor from "./pages/vendors/index.vue";
 
+// router.beforeEach(async (to, from, next) => {
+//   const authStore = useAuthStore();
+
+//   if (!authStore.user) {
+//     await authStore.fetchUser();
+//   }
+
+//   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
+//     next("/");
+//   } else {
+//     next();
+//   }
+
 const routes = [
+  // { path: "/", component: Login },
+  // {
+  //   path: "/dashboard",
+  //   component: Dashboard,
+  //   meta: { requiresAuth: true },
+  // },
+
   // component router
   { path: "/", component: Dashboard },
   { path: "/about", component: About },
@@ -155,5 +181,5 @@ const router = createRouter({
   history: createWebHistory(),
   routes,
 });
-
+// });
 export default router;

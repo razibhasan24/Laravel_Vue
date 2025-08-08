@@ -1,10 +1,14 @@
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 
 const router = useRouter();
 const purchases = ref([]);
 const message = ref("");
+const loading = ref(true);
+
+const currentPage = ref(1);
+const itemsPerPage = 5;
 
 const apiUrl = `http://razib.intelsofts.com/projects/laravel/update_mex/public/api/purchases`;
 
@@ -16,11 +20,29 @@ onMounted(async () => {
       },
     });
     const data = await response.json();
-    purchases.value = data.purchases || data;
+    purchases.value = (data.purchases || data).reverse(); // latest first
+    currentPage.value = 1; // show latest first
   } catch (error) {
     message.value = "Failed to load purchases: " + error.message;
+  } finally {
+    loading.value = false;
   }
 });
+
+const totalPages = computed(() =>
+  Math.ceil(purchases.value.length / itemsPerPage)
+);
+
+const paginatedPurchases = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage;
+  return purchases.value.slice(start, start + itemsPerPage);
+});
+
+function goToPage(page) {
+  if (page >= 1 && page <= totalPages.value) {
+    currentPage.value = page;
+  }
+}
 </script>
 
 <template>
@@ -51,7 +73,15 @@ onMounted(async () => {
         >
         <p v-if="message" class="text-danger">{{ message }}</p>
 
-        <div class="table-responsive bg-transparent rounded">
+        <div v-if="loading" class="text-center">
+          <div class="spinner-border text-light" role="status"></div>
+          <p>Loading...</p>
+        </div>
+
+        <div
+          v-if="!loading && !message && paginatedPurchases.length"
+          class="table-responsive bg-transparent rounded"
+        >
           <table
             class="table table-bordered table-hover table-custom text-center"
           >
@@ -67,7 +97,7 @@ onMounted(async () => {
               </tr>
             </thead>
             <tbody>
-              <tr v-for="purchase in purchases" :key="purchase.id">
+              <tr v-for="purchase in paginatedPurchases" :key="purchase.id">
                 <td>{{ purchase.id }}</td>
                 <td>{{ purchase.agent_id }}</td>
                 <td>{{ purchase.status_id }}</td>
@@ -94,6 +124,42 @@ onMounted(async () => {
               </tr>
             </tbody>
           </table>
+
+          <!-- 🔽 Pagination -->
+          <nav class="mt-4">
+            <ul class="pagination justify-content-center">
+              <li
+                class="page-item"
+                :class="{ disabled: currentPage === 1 }"
+                @click="goToPage(currentPage - 1)"
+              >
+                <a class="page-link" href="#">Prev</a>
+              </li>
+              <li
+                v-for="page in totalPages"
+                :key="page"
+                class="page-item"
+                :class="{ active: currentPage === page }"
+                @click="goToPage(page)"
+              >
+                <a class="page-link" href="#">{{ page }}</a>
+              </li>
+              <li
+                class="page-item"
+                :class="{ disabled: currentPage === totalPages }"
+                @click="goToPage(currentPage + 1)"
+              >
+                <a class="page-link" href="#">Next</a>
+              </li>
+            </ul>
+          </nav>
+        </div>
+
+        <div
+          v-if="!loading && !message && !purchases.length"
+          class="alert alert-warning"
+        >
+          ⚠️ No purchases found.
         </div>
       </div>
     </main>
@@ -121,26 +187,23 @@ onMounted(async () => {
   box-sizing: border-box;
 }
 
-/* 🔹 Topbar */
 .topbar .logo {
   height: 100px;
   object-fit: contain;
 }
 
-/* 🔹 Main Section Background */
 .main-section {
-  background-image: url("/img/background.webp"); /* Replace with your background image */
+  background-image: url("/img/background.webp");
   background-size: cover;
   background-position: center;
   position: relative;
   overflow: hidden;
 }
 
-/* 🔹 Dark Overlay */
 .main-section .overlay {
   position: absolute;
   inset: 0;
-  background-color: rgba(125, 116, 116, 0.4); /* Opacity */
+  background-color: rgba(125, 116, 116, 0.4);
   z-index: 1;
 }
 
@@ -151,7 +214,7 @@ onMounted(async () => {
 
 /* 🔹 Table Styling */
 .table-custom {
-  background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black */
+  background-color: rgba(0, 0, 0, 0.5);
   color: #ffffff;
 }
 
@@ -176,7 +239,18 @@ onMounted(async () => {
   background-color: rgba(255, 255, 255, 0.1);
 }
 
-/* 🔹 Button Styles */
+/* 🔹 Pagination */
+.pagination .page-link {
+  color: #000;
+  cursor: pointer;
+}
+.pagination .active .page-link {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+  color: white;
+}
+
+/* 🔹 Buttons */
 .btn-info {
   background-color: #17a2b8;
   border: none;

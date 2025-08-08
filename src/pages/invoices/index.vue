@@ -1,18 +1,34 @@
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 
 const invoices = ref([]);
 const message = ref("");
 const router = useRouter();
 
+// Pagination
+const currentPage = ref(1);
+const itemsPerPage = 5;
+
+const totalPages = computed(() => {
+  return Math.ceil(invoices.value.length / itemsPerPage);
+});
+
+const paginatedInvoices = computed(() => {
+  const startIndex = (currentPage.value - 1) * itemsPerPage;
+  return invoices.value.slice(startIndex, startIndex + itemsPerPage);
+});
+
+// Fetch Invoices
 async function fetchInvoices() {
   try {
     const res = await fetch(
       "http://razib.intelsofts.com/projects/laravel/update_mex/public/api/invoices"
     );
     if (res.ok) {
-      invoices.value = await res.json();
+      const data = await res.json();
+      invoices.value = data.reverse(); // Latest first
+      currentPage.value = totalPages.value || 1; // Go to last page
     } else {
       message.value = "Failed to fetch invoices.";
     }
@@ -21,20 +37,23 @@ async function fetchInvoices() {
   }
 }
 
+// Routing
 function goToCreate() {
   router.push("/invoices/create");
 }
-
 function goToShow(id) {
   router.push(`/invoices/${id}`);
 }
-
 function goToEdit(id) {
   router.push(`/invoices/edit/${id}`);
 }
-
 function goToDelete(id) {
   router.push(`/invoices/delete/${id}`);
+}
+function goToPage(page) {
+  if (page >= 1 && page <= totalPages.value) {
+    currentPage.value = page;
+  }
 }
 
 onMounted(fetchInvoices);
@@ -42,7 +61,7 @@ onMounted(fetchInvoices);
 
 <template>
   <div class="page-container d-flex flex-column min-vh-100">
-    <!-- 🔹 Topbar -->
+    <!-- Topbar -->
     <header
       class="topbar bg-info text-dark py-3 px-4 d-flex justify-content-between align-items-center"
     >
@@ -56,7 +75,7 @@ onMounted(fetchInvoices);
       </div>
     </header>
 
-    <!-- 🔹 Main Section -->
+    <!-- Main Section -->
     <main
       class="main-section flex-grow-1 position-relative text-white d-flex flex-column"
     >
@@ -67,6 +86,7 @@ onMounted(fetchInvoices);
           ➕ Create New Invoice
         </button>
 
+        <!-- Table -->
         <div class="table-responsive">
           <table
             class="table table-bordered table-hover table-custom text-center"
@@ -82,7 +102,7 @@ onMounted(fetchInvoices);
               </tr>
             </thead>
             <tbody>
-              <tr v-for="invoice in invoices" :key="invoice.id">
+              <tr v-for="invoice in paginatedInvoices" :key="invoice.id">
                 <td>{{ invoice.id }}</td>
                 <td>{{ invoice.customer_id }}</td>
                 <td>{{ invoice.invoice_date }}</td>
@@ -121,11 +141,40 @@ onMounted(fetchInvoices);
           </table>
         </div>
 
+        <!-- Pagination -->
+        <nav v-if="totalPages > 1" class="mt-3">
+          <ul class="pagination justify-content-center">
+            <li
+              class="page-item"
+              :class="{ disabled: currentPage === 1 }"
+              @click="goToPage(currentPage - 1)"
+            >
+              <a class="page-link" href="#">Prev</a>
+            </li>
+            <li
+              v-for="page in totalPages"
+              :key="page"
+              class="page-item"
+              :class="{ active: currentPage === page }"
+              @click="goToPage(page)"
+            >
+              <a class="page-link" href="#">{{ page }}</a>
+            </li>
+            <li
+              class="page-item"
+              :class="{ disabled: currentPage === totalPages }"
+              @click="goToPage(currentPage + 1)"
+            >
+              <a class="page-link" href="#">Next</a>
+            </li>
+          </ul>
+        </nav>
+
         <p v-if="message" class="text-danger mt-3">{{ message }}</p>
       </div>
     </main>
 
-    <!-- 🔹 Footer -->
+    <!-- Footer -->
     <footer class="footer bg-dark text-center text-white py-3 mt-auto">
       &copy; 2025 Money Exchange Ltd. All rights reserved.
     </footer>
@@ -133,7 +182,7 @@ onMounted(fetchInvoices);
 </template>
 
 <style scoped>
-/* 🔹 Layout Container */
+/* Layout */
 .page-container {
   background-color: #ffffff;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
@@ -147,15 +196,15 @@ onMounted(fetchInvoices);
   box-sizing: border-box;
 }
 
-/* 🔹 Topbar */
+/* Topbar */
 .topbar .logo {
   height: 100px;
   object-fit: contain;
 }
 
-/* 🔹 Main Section Background */
+/* Background */
 .main-section {
-  background-image: url("/img/background.webp"); /* Use your background image */
+  background-image: url("/img/background.webp");
   background-size: cover;
   background-position: center;
   position: relative;
@@ -165,7 +214,7 @@ onMounted(fetchInvoices);
 .overlay {
   position: absolute;
   inset: 0;
-  background-color: rgba(125, 116, 116, 0.4); /* Opacity */
+  background-color: rgba(125, 116, 116, 0.4);
   z-index: 1;
 }
 
@@ -174,9 +223,9 @@ onMounted(fetchInvoices);
   z-index: 2;
 }
 
-/* 🔹 Table Styling */
+/* Table */
 .table-custom {
-  background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent */
+  background-color: rgba(0, 0, 0, 0.5);
   color: #ffffff;
 }
 
@@ -201,7 +250,7 @@ onMounted(fetchInvoices);
   background-color: rgba(255, 255, 255, 0.1);
 }
 
-/* 🔹 Buttons */
+/* Buttons */
 .btn-info {
   background-color: #17a2b8;
   border: none;
@@ -226,12 +275,23 @@ onMounted(fetchInvoices);
   background-color: #bd2130;
 }
 
-/* 🔹 Footer */
+/* Pagination */
+.pagination .page-link {
+  color: #000;
+  cursor: pointer;
+}
+.pagination .active .page-link {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+  color: white;
+}
+
+/* Footer */
 .footer {
   font-size: 0.9rem;
 }
 
-/* 🔹 Responsive */
+/* Responsive */
 @media (max-width: 576px) {
   .container {
     padding-left: 1rem;

@@ -262,7 +262,7 @@
           >
             <li class="nav-item">
               <a href="#" class="nav-link active">
-                <i class="nav-icon bi bi-speedometer"></i>
+                <i class="bi bi-briefcase-fill"></i>
                 <p>
                   Customer
                   <i class="nav-arrow bi bi-chevron-right"></i>
@@ -308,7 +308,7 @@
             </li>
             <li class="nav-item">
               <a href="#" class="nav-link active">
-                <i class="nav-icon bi bi-speedometer"></i>
+                <i class="bi bi-cart-plus-fill"></i>
                 <p>
                   Purchase
                   <i class="nav-arrow bi bi-chevron-right"></i>
@@ -331,7 +331,7 @@
             </li>
             <li class="nav-item">
               <a href="#" class="nav-link active">
-                <i class="nav-icon bi bi-speedometer"></i>
+                <i class="bi bi-union"></i>
                 <p>
                   Money Stock
                   <i class="nav-arrow bi bi-chevron-right"></i>
@@ -360,7 +360,7 @@
             </li>
             <li class="nav-item">
               <a href="#" class="nav-link active">
-                <i class="nav-icon bi bi-speedometer"></i>
+                <i class="bi bi-cart"></i>
                 <p>
                   Sales & Orders
                   <i class="nav-arrow bi bi-chevron-right"></i>
@@ -383,7 +383,7 @@
             </li>
             <li class="nav-item">
               <a href="#" class="nav-link active">
-                <i class="nav-icon bi bi-speedometer"></i>
+                <i class="bi bi-brilliance"></i>
                 <p>
                   Accounts
                   <i class="nav-arrow bi bi-chevron-right"></i>
@@ -418,7 +418,7 @@
             </li>
             <li class="nav-item">
               <a href="#" class="nav-link active">
-                <i class="nav-icon bi bi-speedometer"></i>
+                <i class="bi bi-file-earmark-font-fill"></i>
                 <p>
                   Transactions
                   <i class="nav-arrow bi bi-chevron-right"></i>
@@ -442,7 +442,7 @@
 
             <li class="nav-item">
               <a href="#" class="nav-link active">
-                <i class="nav-icon bi bi-speedometer"></i>
+                <i class="bi bi-credit-card"></i>
                 <p>
                   Payment
                   <i class="nav-arrow bi bi-chevron-right"></i>
@@ -466,7 +466,7 @@
 
             <li class="nav-item">
               <a href="#" class="nav-link active">
-                <i class="nav-icon bi bi-speedometer"></i>
+                <i class="bi bi-graph-down"></i>
                 <p>
                   Exchange_Rate
                   <i class="nav-arrow bi bi-chevron-right"></i>
@@ -489,7 +489,7 @@
             </li>
             <li class="nav-item">
               <a href="#" class="nav-link active">
-                <i class="nav-icon bi bi-speedometer"></i>
+                <i class="bi bi-gear"></i>
                 <p>
                   Sittings
                   <i class="nav-arrow bi bi-chevron-right"></i>
@@ -498,7 +498,7 @@
               <ul class="nav nav-treeview">
                 <li class="nav-item">
                   <router-link to="/orders/create" class="nav-link">
-                    <i class="nav-icon bi bi-circle"></i>
+                    <i class="bi bi-gear-wide-connected"></i>
                     <p>KYC sitting</p>
                   </router-link>
                 </li>
@@ -506,7 +506,7 @@
             </li>
             <li class="nav-item">
               <a href="#" class="nav-link active">
-                <i class="nav-icon bi bi-speedometer"></i>
+                <i class="bi bi-box-arrow-right"></i>
                 <p>
                   Log-in
                   <i class="nav-arrow bi bi-chevron-right"></i>
@@ -515,7 +515,7 @@
             </li>
             <li class="nav-item">
               <a href="#" class="nav-link active">
-                <i class="nav-icon bi bi-speedometer"></i>
+                <i class="bi bi-box-arrow-left"></i>
                 <p>
                   log-out
                   <i class="nav-arrow bi bi-chevron-right"></i>
