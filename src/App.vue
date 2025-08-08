@@ -532,6 +532,9 @@
     <!--begin::App Main-->
     <main class="app-main">
       <!--begin::App Content Header-->
+      <template>
+        <router-view />
+      </template>
       <router-view></router-view>
       <!--end::App Content-->
     </main>
