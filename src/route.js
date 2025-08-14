@@ -74,6 +74,8 @@ import DeleteTransaction from "./pages/transactions/delete.vue";
 
 // Money_stocks router
 
+import StockBalance from "./pages/money_stocks/stock_balance.vue";
+
 import Stock from "./pages/money_stocks/index.vue";
 import ShowStock from "./pages/money_stocks/show.vue";
 import CreateStock from "./pages/money_stocks/create.vue";
@@ -167,6 +169,8 @@ const routes = [
   { path: "/transactions/delete/:id", component: DeleteTransaction },
 
   // Money_Stocks router
+
+  { path: "/stock_balance", component: StockBalance },
 
   { path: "/money_stocks", component: Stock },
   { path: "/money_stocks/create", component: CreateStock },

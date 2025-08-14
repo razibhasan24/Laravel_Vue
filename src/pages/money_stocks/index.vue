@@ -171,7 +171,7 @@ function goPage(p) {
 
 .table-custom {
   background-color: rgba(0, 0, 0, 0.3);
-  color: #fff;
+  /* color: #fff; */
   border-radius: 10px;
   backdrop-filter: blur(3px);
 }
