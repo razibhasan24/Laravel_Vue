@@ -182,7 +182,7 @@ const routes = [
 ];
 
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHistory("/projects/laravel-vue/"),
   routes,
 });
 // });
